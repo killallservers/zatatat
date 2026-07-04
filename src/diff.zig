@@ -268,7 +268,16 @@ fn writeBg(output: *std.ArrayList(u8), color: u8) !void {
 // FFI Exports for C/FFI interop (Go, Rust, Node.js via Bun, etc.)
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Struct returned by renderer_render_diff for FFI
+/// Allows caller to free output without searching for null terminator
+/// Must be extern to have guaranteed C ABI layout
+pub const OutputSlice = extern struct {
+    ptr: ?[*]u8,
+    len: usize,
+};
+
 /// Global arena allocator for FFI layer. Renderers created via FFI own their memory.
+/// Never freed (acceptable for libraries; OS cleans up on process exit).
 var ffi_arena: ?std.heap.ArenaAllocator = null;
 
 fn getFfiAllocator() std.mem.Allocator {
@@ -300,29 +309,28 @@ export fn renderer_set_row_offset(ptr: ?*Renderer, offset: u16) void {
     }
 }
 
-/// u8* renderer_render_diff(Renderer* ptr, u32* back_buffer, usize buffer_len)
-/// Returns pointer to ANSI string. Caller owns the returned pointer and must free it.
+/// OutputSlice renderer_render_diff(Renderer* ptr, u32* back_buffer, usize buffer_len)
+/// Returns pointer and length. Caller owns the returned pointer and must free it via renderer_free_output.
+/// Returns .{ptr = null, len = 0} on error (ptr == null indicates error).
 export fn renderer_render_diff(
     ptr: ?*Renderer,
     back_buffer: [*]u32,
     buffer_len: usize,
-) ?[*]u8 {
-    if (ptr == null) return null;
+) OutputSlice {
+    if (ptr == null) return .{ .ptr = null, .len = 0 };
 
     const allocator = getFfiAllocator();
     const slice = back_buffer[0..buffer_len];
-    const result = ptr.?.renderDiff(slice, allocator) catch return null;
-    return result.ptr;
+    const result = ptr.?.renderDiff(slice, allocator) catch return .{ .ptr = null, .len = 0 };
+    return .{ .ptr = result.ptr, .len = result.len };
 }
 
-/// void renderer_free_output(u8* ptr)
+/// void renderer_free_output(u8* ptr, usize len)
 /// Free output string returned by renderer_render_diff()
-export fn renderer_free_output(ptr: ?[*]u8) void {
+/// Must be called with the exact length returned by renderer_render_diff.
+export fn renderer_free_output(ptr: ?[*]u8, len: usize) void {
     if (ptr) |p| {
         const allocator = getFfiAllocator();
-        // Convert pointer back to slice (we don't have the length, so assume it's null-terminated)
-        var len: usize = 0;
-        while (p[len] != 0) : (len += 1) {}
         const slice = p[0..len];
         allocator.free(slice);
     }

@@ -11,6 +11,22 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
+    // ─────────────────────────────────────────────────────────────────────
+    // Shared Library (for FFI: Go, Rust, Node.js via Bun, etc.)
+    // ─────────────────────────────────────────────────────────────────────
+
+    const lib = b.addLibrary(.{
+        .name = "zatatat",
+        .root_module = zatatat_module,
+        .linkage = .dynamic,
+    });
+
+    if (optimize == .ReleaseFast or optimize == .ReleaseSmall) {
+        lib.root_module.strip = true; // Remove debug symbols in release builds
+    }
+
+    b.installArtifact(lib);
+
     // Main executable (example)
     const exe = b.addExecutable(.{
         .name = "zatatat",

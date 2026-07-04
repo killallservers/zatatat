@@ -3,10 +3,12 @@
 //!
 //! Public API exports:
 //! - Renderer struct with init(), deinit(), renderDiff(), setRowOffset()
+//! - OutputSlice struct for FFI return values
 //! - FFI functions for C interop (Go, Rust, Node.js via Bun)
 
 pub const diff = @import("diff.zig");
 pub const Renderer = diff.Renderer;
+pub const OutputSlice = diff.OutputSlice;
 
 // Re-export FFI functions
 pub const renderer_new = diff.renderer_new;
