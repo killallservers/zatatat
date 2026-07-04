@@ -1,2 +1,4 @@
 .claude/settings.local.json.tmp.*
 .zig-cache/
+.zig-cache/
+zig-out/
