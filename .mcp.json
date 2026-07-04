@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "groundzero": {
+      "command": "bunx",
+      "args": ["@groundzero/mcp"],
+      "env": {
+        "LLM_PROVIDER": "anthropic",
+        "LLM_API_KEY": "YOUR_API_KEY"
+      }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_TOKEN": "YOUR_GITHUB_TOKEN"
+      }
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "./"]
+    }
+  }
+}

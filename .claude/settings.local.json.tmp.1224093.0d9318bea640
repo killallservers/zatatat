@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(zig build *)",
+      "Bash(zig version *)",
+      "Bash(zig build-lib *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "github",
+    "filesystem"
+  ],
+  "disabledMcpjsonServers": [
+    "groundzero"
+  ]
+}
